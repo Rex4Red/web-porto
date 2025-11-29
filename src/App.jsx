@@ -64,8 +64,14 @@ const Reveal = ({ children, delay = 0 }) => {
 const Portfolio = () => {
   // --- STATE LOADINGS (SPLASH SCREEN) ---
   const [isLoading, setIsLoading] = useState(true);
-  const [decodedText, setDecodedText] = useState(""); // State khusus Matrix Decode
+  const [decodedText, setDecodedText] = useState(""); 
   
+  // --- STATE TYPEWRITER HERO ---
+  const [typewriterText, setTypewriterText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [loopNum, setLoopNum] = useState(0);
+  const [typingSpeed, setTypingSpeed] = useState(100); // Default speed lebih cepat
+
   // --- STATE UTAMA ---
   const [activeTab, setActiveTab] = useState('All');
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -80,24 +86,55 @@ const Portfolio = () => {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const chatEndRef = useRef(null);
 
-  // --- EFEK: MATRIX DECODE ANIMATION (UPDATED!) ---
+  // --- EFEK: TYPEWRITER HERO SECTION (SMOOTH VERSION) ---
   useEffect(() => {
-    // FIX 1: Matikan scroll restoration bawaan browser
+    const phrases = ["Hi, Saya Putra", "Full Stack Developer"];
+    
+    const handleType = () => {
+      const i = loopNum % phrases.length;
+      const fullText = phrases[i];
+
+      setTypewriterText(isDeleting 
+        ? fullText.substring(0, typewriterText.length - 1) 
+        : fullText.substring(0, typewriterText.length + 1)
+      );
+
+      // --- LOGIKA KECEPATAN HALUS ---
+      // Mengetik: 80ms - 130ms (Variasi acak agar natural seperti manusia)
+      // Menghapus: 40ms (Cepat dan konstan)
+      let nextSpeed = isDeleting ? 40 : 100 - Math.random() * 50;
+
+      // Jika selesai mengetik satu kalimat utuh
+      if (!isDeleting && typewriterText === fullText) {
+        nextSpeed = 2000; // Tahan 2 detik biar terbaca jelas
+        setIsDeleting(true);
+      } 
+      // Jika selesai menghapus semua
+      else if (isDeleting && typewriterText === '') {
+        setIsDeleting(false);
+        setLoopNum(loopNum + 1);
+        nextSpeed = 500; // Jeda setengah detik sebelum mengetik kalimat baru
+      }
+
+      setTypingSpeed(nextSpeed);
+    };
+
+    const timer = setTimeout(handleType, typingSpeed);
+    return () => clearTimeout(timer);
+  }, [typewriterText, isDeleting, loopNum, typingSpeed]);
+
+  // --- EFEK: MATRIX DECODE ANIMATION (SPLASH SCREEN) ---
+  useEffect(() => {
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
-
-    // FIX 2: Paksa scroll ke paling atas
     window.scrollTo(0, 0);
-
-    // FIX 3: Bersihkan hash (#contact) dari URL
     if (window.location.hash) {
       window.history.replaceState(null, '', window.location.pathname);
     }
 
-    // KONFIGURASI MATRIX DECODE
-    const targetText = "MOHAMMAD THALIB AGUS SAPUTRA"; // Teks akhir yang muncul
-    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*"; // Karakter acak
+    const targetText = "MOHAMMAD THALIB AGUS SAPUTRA"; 
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*"; 
     let iteration = 0;
     
     const interval = setInterval(() => {
@@ -108,23 +145,21 @@ const Portfolio = () => {
             if (index < iteration) {
               return targetText[index];
             }
-            // Kembalikan karakter acak selama belum sampai iterasi-nya
             return characters[Math.floor(Math.random() * characters.length)];
           })
           .join("")
       );
 
-      // Jika animasi selesai
       if (iteration >= targetText.length) {
         clearInterval(interval);
         setTimeout(() => {
           setIsLoading(false);
           window.scrollTo(0, 0); 
-        }, 1000); // Tahan 1 detik setelah teks terbaca jelas
+        }, 1000); 
       }
 
-      iteration += 1 / 2; // Kecepatan dekripsi (semakin kecil semakin lambat)
-    }, 30); // Kecepatan frame
+      iteration += 1 / 2; 
+    }, 30); 
 
     return () => clearInterval(interval);
   }, []);
@@ -141,10 +176,8 @@ const Portfolio = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory]);
 
-  // --- HANDLE SMOOTH SCROLL ---
   const handleSmoothScroll = (e, targetId) => {
     e.preventDefault(); 
-    
     const element = document.getElementById(targetId);
     if (element) {
       element.scrollIntoView({ 
@@ -156,7 +189,6 @@ const Portfolio = () => {
     }
   };
 
-  // Data Proyek
   const projects = [
     {
       id: 1,
@@ -206,7 +238,6 @@ const Portfolio = () => {
     setChatHistory(prev => [...prev, { role: 'user', text: userMessage }]);
     setIsAiLoading(true);
 
-    // --- ISI BIODATA KAMU DISINI (Agar AI Pintar) ---
     const portfolioContext = `
       Kamu adalah Asisten AI Virtual untuk portofolio Mohammad Thalib Agus Saputra (panggilan: Putra).
       Tugasmu adalah menjawab pertanyaan pengunjung seolah-olah kamu mengenal Putra dengan sangat baik.
@@ -237,7 +268,7 @@ const Portfolio = () => {
     `;
 
     try {
-      const apiKey = "AIzaSyBTOis5RZhC2mRwQpT_mt3_lGsox12EPAI"; // API Key
+      const apiKey = "AIzaSyBTOis5RZhC2mRwQpT_mt3_lGsox12EPAI"; 
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
         {
@@ -312,6 +343,14 @@ const Portfolio = () => {
         .animate-spin-slow {
           animation: spin-slow 8s linear infinite;
         }
+        /* Kursor Berkedip */
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+        .animate-cursor {
+          animation: blink 1s step-end infinite;
+        }
       `}</style>
 
       {/* --- SPLASH SCREEN: MATRIX DECODE --- */}
@@ -352,7 +391,7 @@ const Portfolio = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex-shrink-0 font-bold text-2xl tracking-tighter bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-              DEV.PORTO
+              Full Stack Developer
             </div>
             
             <div className="hidden md:block">
@@ -421,9 +460,12 @@ const Portfolio = () => {
           </Reveal>
           
           <Reveal delay={200}>
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight">
-              Hi, Saya <br/>
-              <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">Putra</span>
+            {/* --- TYPEWRITER EFFECT DI SINI --- */}
+            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight min-h-[150px] md:min-h-[180px]">
+              <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                {typewriterText}
+              </span>
+              <span className="animate-cursor text-slate-400 ml-1">|</span>
             </h1>
           </Reveal>
 
@@ -435,7 +477,7 @@ const Portfolio = () => {
 
           <Reveal delay={600}>
             <div className="flex flex-wrap gap-4 text-sm font-medium pt-4">
-              {['Web Developer', 'IoT Enthusiast', 'ML Engineer'].map((role) => (
+              {['Web Developer', 'IoT Enthusiast', 'ML Engineer', 'Mobile App Developer'].map((role) => (
                 <span key={role} className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${isDarkMode ? 'border-slate-700 bg-slate-800/50' : 'border-slate-300 bg-white/50'} backdrop-blur-sm`}>
                   <Zap size={14} className="text-yellow-500" /> {role}
                 </span>
@@ -612,9 +654,7 @@ const Portfolio = () => {
         <Reveal>
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-10">
-              <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-500 font-medium text-sm mb-4">
-                <Sparkles size={16} /> Powered by Gemini AI
-              </div>
+
               <h2 className="text-3xl md:text-4xl font-bold mb-4">Tanya Asisten Virtual</h2>
               <p className={`${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                 Penasaran dengan detail teknis atau ingin saran proyek? Tanya langsung ke AI saya.
