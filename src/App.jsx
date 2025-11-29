@@ -424,7 +424,7 @@ const Portfolio = () => {
 
           <Reveal delay={600}>
             <div className="flex flex-wrap gap-4 text-sm font-medium pt-4">
-              {['Web Developer', 'IoT Enthusiast', 'ML Engineer'].map((role) => (
+              {['Web Developer', 'IoT Enthusiast', 'ML Engineer', 'Mobile App Developer'].map((role) => (
                 <span key={role} className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${isDarkMode ? 'border-slate-700 bg-slate-800/50' : 'border-slate-300 bg-white/50'} backdrop-blur-sm`}>
                   <Zap size={14} className="text-yellow-500" /> {role}
                 </span>
