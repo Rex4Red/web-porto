@@ -22,7 +22,8 @@ import {
   Bot,
   Terminal,
   CheckCircle,
-  Zap
+  Zap,
+  Loader2
 } from 'lucide-react';
 
 // --- KOMPONEN: SCROLL REVEAL (Efek Muncul saat Scroll) ---
@@ -63,8 +64,7 @@ const Reveal = ({ children, delay = 0 }) => {
 const Portfolio = () => {
   // --- STATE LOADINGS (SPLASH SCREEN) ---
   const [isLoading, setIsLoading] = useState(true);
-  const [loadingStep, setLoadingStep] = useState(0);
-  const [logs, setLogs] = useState([]);
+  const [decodedText, setDecodedText] = useState(""); // State khusus Matrix Decode
   
   // --- STATE UTAMA ---
   const [activeTab, setActiveTab] = useState('All');
@@ -80,7 +80,7 @@ const Portfolio = () => {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const chatEndRef = useRef(null);
 
-  // --- EFEK: ADVANCED BOOT SEQUENCE ANIMATION ---
+  // --- EFEK: MATRIX DECODE ANIMATION (UPDATED!) ---
   useEffect(() => {
     // FIX 1: Matikan scroll restoration bawaan browser
     if ('scrollRestoration' in window.history) {
@@ -95,33 +95,36 @@ const Portfolio = () => {
       window.history.replaceState(null, '', window.location.pathname);
     }
 
-    const bootSequence = [
-      "Initializing Core Systems...",
-      "Loading React Engine v18.2...",
-      "Connecting to GitHub API...",
-      "Fetching IoT Protocols...",
-      "Calibrating Neural Networks...",
-      "Optimizing UI/UX Modules...",
-      "System Check: 100% OK",
-      "ACCESS GRANTED"
-    ];
-
-    let currentStep = 0;
+    // KONFIGURASI MATRIX DECODE
+    const targetText = "MOHAMMAD THALIB AGUS SAPUTRA"; // Teks akhir yang muncul
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*"; // Karakter acak
+    let iteration = 0;
     
     const interval = setInterval(() => {
-      if (currentStep < bootSequence.length) {
-        setLogs(prev => [...prev, bootSequence[currentStep]]);
-        setLoadingStep(prev => prev + 1);
-        currentStep++;
-      } else {
+      setDecodedText(prev => 
+        targetText
+          .split("")
+          .map((letter, index) => {
+            if (index < iteration) {
+              return targetText[index];
+            }
+            // Kembalikan karakter acak selama belum sampai iterasi-nya
+            return characters[Math.floor(Math.random() * characters.length)];
+          })
+          .join("")
+      );
+
+      // Jika animasi selesai
+      if (iteration >= targetText.length) {
         clearInterval(interval);
         setTimeout(() => {
           setIsLoading(false);
-          // Scroll ke atas lagi sesaat setelah loading selesai untuk memastikan
           window.scrollTo(0, 0); 
-        }, 800); 
+        }, 1000); // Tahan 1 detik setelah teks terbaca jelas
       }
-    }, 400); 
+
+      iteration += 1 / 2; // Kecepatan dekripsi (semakin kecil semakin lambat)
+    }, 30); // Kecepatan frame
 
     return () => clearInterval(interval);
   }, []);
@@ -301,37 +304,45 @@ const Portfolio = () => {
           background-image: linear-gradient(to right, rgba(59, 130, 246, 0.1) 1px, transparent 1px),
                             linear-gradient(to bottom, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
         }
+        /* Custom Spin for Loader */
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 8s linear infinite;
+        }
       `}</style>
 
-      {/* --- SPLASH SCREEN: TERMINAL BOOT SEQUENCE --- */}
+      {/* --- SPLASH SCREEN: MATRIX DECODE --- */}
       <div className={`fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center font-mono transition-all duration-1000 ${isLoading ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
-        <div className="w-full max-w-lg p-6">
-          <div className="flex items-center gap-2 mb-6 border-b border-green-900 pb-2">
-            <Terminal className="text-green-500 animate-pulse" />
-            <span className="text-green-500 font-bold tracking-wider">SYSTEM_BOOT_SEQUENCE</span>
-          </div>
+        <div className="relative z-10 flex flex-col items-center px-4 text-center">
           
-          <div className="space-y-2 mb-8 h-48 overflow-hidden relative">
-            {logs.map((log, index) => (
-              <div key={index} className="text-green-400 text-sm flex items-center gap-2 animate-slide-up">
-                <span className="text-green-700">[{new Date().toLocaleTimeString()}]</span>
-                <span>{log}</span>
-                {index === logs.length - 1 && <span className="w-2 h-4 bg-green-500 animate-pulse inline-block ml-1"></span>}
-              </div>
-            ))}
+          {/* Logo Berputar Cepat dengan Efek Glow */}
+          <div className="mb-8 relative">
+            <div className="absolute inset-0 bg-blue-500 blur-3xl opacity-20 animate-pulse"></div>
+            <div className="relative z-10 p-4 border border-blue-500/30 rounded-full bg-black/50 backdrop-blur-sm">
+              <Cpu size={64} className="text-blue-500 animate-spin-slow" />
+            </div>
           </div>
 
-          {/* Loading Bar */}
-          <div className="w-full h-1 bg-green-900 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-green-500 transition-all duration-300 ease-out"
-              style={{ width: `${(loadingStep / 8) * 100}%` }}
-            ></div>
+          {/* Teks Matrix Decode */}
+          <div className="space-y-4">
+            <div className="text-xs text-blue-500 tracking-[0.3em] animate-pulse">SYSTEM IDENTIFICATION</div>
+            <h1 className="text-2xl md:text-4xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400 font-mono min-h-[40px]">
+              {decodedText}
+            </h1>
           </div>
-          <div className="mt-2 text-right text-xs text-green-600">
-            {Math.min(Math.round((loadingStep / 8) * 100), 100)}% COMPLETE
+          
+          {/* Status Loading Bawah */}
+          <div className="mt-8 flex items-center gap-3 text-slate-500 text-xs tracking-widest border-t border-slate-800 pt-4">
+            <Loader2 className="animate-spin text-blue-500" size={14} />
+            <span>ESTABLISHING SECURE CONNECTION...</span>
           </div>
         </div>
+
+        {/* Efek Scanline TV Lama (Hiasan Background) */}
+        <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-0 bg-[length:100%_2px,3px_100%] opacity-20"></div>
       </div>
 
       {/* --- KONTEN UTAMA --- */}
@@ -424,7 +435,7 @@ const Portfolio = () => {
 
           <Reveal delay={600}>
             <div className="flex flex-wrap gap-4 text-sm font-medium pt-4">
-              {['Web Developer', 'IoT Enthusiast', 'ML Engineer', 'Mobile App Developer'].map((role) => (
+              {['Web Developer', 'IoT Enthusiast', 'ML Engineer'].map((role) => (
                 <span key={role} className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${isDarkMode ? 'border-slate-700 bg-slate-800/50' : 'border-slate-300 bg-white/50'} backdrop-blur-sm`}>
                   <Zap size={14} className="text-yellow-500" /> {role}
                 </span>
@@ -601,6 +612,9 @@ const Portfolio = () => {
         <Reveal>
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-10">
+              <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-500 font-medium text-sm mb-4">
+                <Sparkles size={16} /> Powered by Gemini AI
+              </div>
               <h2 className="text-3xl md:text-4xl font-bold mb-4">Tanya Asisten Virtual</h2>
               <p className={`${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                 Penasaran dengan detail teknis atau ingin saran proyek? Tanya langsung ke AI saya.
